@@ -60,7 +60,7 @@ if __name__ == "__main__":
     display('+', f"User {Back.MAGENTA}{arguments.user}{Back.RESET} Authenticated @ {Back.MAGENTA}{arguments.server}:{arguments.port}{Back.RESET}")
 
     list_status, mailboxes = Mailbox.list()
-    mailboxes = [str(mailbox).split('"')[-1].replace("'", '').strip() for mailbox in mailboxes if str(mailbox).split('"')[-1].replace("'", '').strip() != '']
+    mailboxes = [str(mailbox)[str(mailbox).index('"." ')+4:].replace('"', '').replace("'", '') for mailbox in mailboxes]
     display(':', f"Total Mailboxes = {Back.MAGENTA}{len(mailboxes)}{Back.RESET}")
     for mailbox in mailboxes:
         display('+', f"\t* {mailbox}")
@@ -74,7 +74,7 @@ if __name__ == "__main__":
         display(':', f"Fetching {Back.MAGENTA}{mailbox}{Back.RESET}")
         mailbox_directory = user_directory / mailbox
         mailbox_directory.mkdir(exist_ok=True)
-        Mailbox.select(mailbox)
+        Mailbox.select(f'"{mailbox}"')
         search_status, mail_data = Mailbox.search(None, "ALL")
         try:
             mail_indexes = [mail_index for mail_index in str(mail_data[0]).replace('b', '').replace("'", '').split(' ') if mail_index != '']
