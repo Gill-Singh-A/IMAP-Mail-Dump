@@ -76,12 +76,14 @@ if __name__ == "__main__":
         Mailbox.select(mailbox)
         search_status, mail_data = Mailbox.search(None, "ALL")
         try:
-            mail_indexes = [mail_index for mail_index in str(mail_data[0]).replace('b', '').replace("'", '').split(' ')]
+            mail_indexes = [mail_index for mail_index in str(mail_data[0]).replace('b', '').replace("'", '').split(' ') if mail_index != '']
             total_mails = len(mail_indexes)
+            if total_mails == 0:
+                display('+', f"No Mails Found")
+                continue
             display('+', f"Mails Found = {Back.MAGENTA}{total_mails}{Back.RESET}")
         except ValueError:
             display('+', f"No Mails Found")
-            print("No Mails Found")
             continue
         for index, mail_index in enumerate(mail_indexes):
             display('*', f"Mails Retrieved = {index+1}/{total_mails}", start='\r', end='')
