@@ -35,11 +35,11 @@ if __name__ == "__main__":
                               ('-p', "--port", "port", f"Port of IMAP Server (Default={imap_port})"),
                               ('-S', "--use-ssl", "use_ssl", f"Use SSL for Transfering Mail Data from IMAP Server (Default={use_ssl})"))
     if not arguments.user:
-        display('-', f"Please Provide a {Back.YELLOW}User{Back.RESET}")
-        exit(0)
+        display(':', f"Please Provide a {Back.MAGENTA}User{Back.RESET} : ", end='')
+        arguments.user = input()
     if not arguments.server:
-        display('-', f"Please Provide a {Back.YELLOW}Server{Back.RESET}")
-        exit(0)
+        display(':', f"Please Provide a {Back.MAGENTA}Server{Back.RESET} : ", end='')
+        arguments.server = input()
     arguments.port = imap_port if not arguments.port else int(arguments.port)
     arguments.use_ssl = False if arguments.use_ssl != None and 't' not in arguments.use_ssl.lower() else use_ssl
     password = getpass(f"Enter password for [{arguments.user}@{arguments.server}:{arguments.port}] : ")
