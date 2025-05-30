@@ -54,3 +54,10 @@ if __name__ == "__main__":
         display('-', f"Authentication Failed for User {Back.MAGENTA}{arguments.user}{Back.RESET} @ IMAP Server {Back.MAGENTA}{arguments.server}:{arguments.port}{Back.RESET}")
         exit(0)
     display('+', f"User {Back.MAGENTA}{arguments.user}{Back.RESET} Authenticated @ {Back.MAGENTA}{arguments.server}:{arguments.port}{Back.RESET}")
+
+    list_status, mailboxes = Mailbox.list()
+    mailboxes = [str(mailbox).split('"')[-1].replace("'", '').strip() for mailbox in mailboxes]
+    display(':', f"Total Mailboxes = {Back.MAGENTA}{len(mailboxes)}{Back.RESET}")
+    for mailbox in mailboxes:
+        display('+', f"\t* {mailbox}")
+    print()
