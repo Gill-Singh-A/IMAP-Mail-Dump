@@ -1,8 +1,9 @@
 #! /usr/bin/env python3
 
-import imaplib, email
+import imaplib, email, string
 from pathlib import Path
 from datetime import date
+from random import choice
 from getpass import getpass
 from email.parser import Parser
 from optparse import OptionParser
@@ -115,8 +116,12 @@ if __name__ == "__main__":
                     try:
                         attachments_directory = mail_directory / "attachments"
                         attachments_directory.mkdir(exist_ok=True)
-                        with open(f"{arguments.server}:{arguments.port}/{arguments.user}/{mailbox}/{mail_index}/attachments/{fileName}", 'wb') as file:
-                            file.write(part.get_payload(decode=True))
+                        try:
+                            with open(f"{arguments.server}:{arguments.port}/{arguments.user}/{mailbox}/{mail_index}/attachments/{fileName}", 'wb') as file:
+                                file.write(part.get_payload(decode=True))
+                        except Exception as error:
+                            with open(f"{arguments.server}:{arguments.port}/{arguments.user}/{mailbox}/{mail_index}/attachments/{''.join(choice(string.ascii_letters) for _ in range(10))}", 'wb') as file:
+                                file.write(part.get_payload(decode=True))
                     except TypeError:
                         pass
         print('\n')
