@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 
-import sys, imaplib, email
+import imaplib, email
 from pathlib import Path
 from datetime import date
 from getpass import getpass
@@ -18,6 +18,7 @@ status_color = {
 }
 
 imap_port = 993
+use_ssl = True
 
 def display(status, data, start='', end='\n'):
     print(f"{start}{status_color[status]}[{status}] {Fore.BLUE}[{date.today()} {strftime('%H:%M:%S', localtime())}] {status_color[status]}{Style.BRIGHT}{data}{Fore.RESET}{Style.RESET_ALL}", end=end)
@@ -31,7 +32,8 @@ def get_arguments(*args):
 if __name__ == "__main__":
     arguments = get_arguments(('-u', "--user", "user", "Username of EMail"),
                               ('-s', "--server", "server", "Address of IMAP Server"),
-                              ('-p', "--port", "port", f"Port of IMAP Server (Default={imap_port})"))
+                              ('-p', "--port", "port", f"Port of IMAP Server (Default={imap_port})"),
+                              ('-S', "--use-ssl", "use_ssl", f"Use SSL for Transfering Mail Data from IMAP Server (Default={use_ssl})"))
     if not arguments.user:
         display('-', f"Please Provide a {Back.YELLOW}User{Back.RESET}")
         exit(0)
@@ -39,11 +41,12 @@ if __name__ == "__main__":
         display('-', f"Please Provide a {Back.YELLOW}Server{Back.RESET}")
         exit(0)
     arguments.port = imap_port if not arguments.port else int(arguments.port)
-    password = getpass(f"Enter password for {arguments.user}@{arguments.server}:{arguments.port} => ")
+    arguments.use_ssl = False if arguments.use_ssl != None and 't' not in arguments.use_ssl.lower() else use_ssl
+    password = getpass(f"Enter password for [{arguments.user}@{arguments.server}:{arguments.port}] : ")
 
     display(':', f"Connecting to Server {Back.MAGENTA}{arguments.server}:{arguments.port}{Back.RESET}")
     try:
-        Mailbox = imaplib.IMAP4_SSL(arguments.server, port=arguments.port)
+        Mailbox = imaplib.IMAP4_SSL(arguments.server, port=arguments.port) if arguments.use_ssl else imaplib.IMAP4(arguments.server, port=arguments.port)
     except:
         display('-', f"Can't Reach IMAP Server {Back.MAGENTA}{arguments.server}:{arguments.port}{Back.RESET}")
         exit(0)
