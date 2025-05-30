@@ -60,7 +60,7 @@ if __name__ == "__main__":
     display('+', f"User {Back.MAGENTA}{arguments.user}{Back.RESET} Authenticated @ {Back.MAGENTA}{arguments.server}:{arguments.port}{Back.RESET}")
 
     list_status, mailboxes = Mailbox.list()
-    mailboxes = [str(mailbox).split('"')[-1].replace("'", '').strip() for mailbox in mailboxes]
+    mailboxes = [str(mailbox).split('"')[-1].replace("'", '').strip() for mailbox in mailboxes if str(mailbox).split('"')[-1].replace("'", '').strip() != '']
     display(':', f"Total Mailboxes = {Back.MAGENTA}{len(mailboxes)}{Back.RESET}")
     for mailbox in mailboxes:
         display('+', f"\t* {mailbox}")
