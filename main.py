@@ -61,3 +61,57 @@ if __name__ == "__main__":
     for mailbox in mailboxes:
         display('+', f"\t* {mailbox}")
     print()
+
+    cwd = Path.cwd()
+    user_directory = cwd / f"{arguments.server}:{arguments.port}" / arguments.user
+    user_directory.mkdir(exist_ok=True, parents=True)
+
+    for mailbox in mailboxes:
+        display(':', f"Fetching {Back.MAGENTA}{mailbox}{Back.RESET}")
+        mailbox_directory = user_directory / mailbox
+        mailbox_directory.mkdir(exist_ok=True)
+        Mailbox.select(mailbox)
+        search_status, mail_data = Mailbox.search(None, "ALL")
+        try:
+            mail_indexes = [mail_index for mail_index in str(mail_data[0]).replace('b', '').replace("'", '').split(' ')]
+            total_mails = len(mail_indexes)
+            display('+', f"Mails Found = {Back.MAGENTA}{total_mails}{Back.RESET}")
+        except ValueError:
+            display('+', f"No Mails Found")
+            print("No Mails Found")
+            continue
+        for index, mail_index in enumerate(mail_indexes):
+            display('*', f"Mails Retrieved = {index+1}/{total_mails}", start='\r', end='')
+            mail_status, individual_mail_data = Mailbox.fetch(mail_index, "(RFC822)")
+            mail_directory = mailbox_directory / f"{mail_index}"
+            mail_directory.mkdir(exist_ok=True)
+            with open(f"{arguments.server}:{arguments.port}/{arguments.user}/{mailbox}/{mail_index}/mail.eml", 'wb') as file:
+                file.write(individual_mail_data[0][1])
+            try:
+                with open(f"{arguments.server}:{arguments.port}/{arguments.user}/{mailbox}/{mail_index}/mail.eml", 'r') as file:
+                    mail_headers = Parser().parse(file)
+                with open(f"{arguments.server}:{arguments.port}/{arguments.user}/{mailbox}/{mail_index}/headers.txt", 'wb') as file:
+                    file.write(f"Date: {(mail_headers['date'])}\n".encode())
+                    file.write(f"From: {mail_headers['from']}\n".encode())
+                    file.write(f"To: {mail_headers['to']}\n".encode())
+                    file.write(f"CC: {mail_headers['cc']}\n".encode())
+                    file.write(f"BCC: {mail_headers['bcc']}\n".encode())
+                    file.write('\n'.encode())
+            except:
+                pass
+            mail_message = email.message_from_bytes(individual_mail_data[0][1])
+            for part in mail_message.walk():
+                if part.get_content_maintype() == 'multipart':
+                    continue
+                if part.get('Content-Disposition') is None:
+                    continue
+                fileName = part.get_filename()
+                if bool(fileName):
+                    try:
+                        attachments_directory = mail_directory / "attachments"
+                        attachments_directory.mkdir(exist_ok=True)
+                        with open(f"{arguments.server}:{arguments.port}/{arguments.user}/{mailbox}/{mail_index}/attachments/{fileName}", 'wb') as file:
+                            file.write(part.get_payload(decode=True))
+                    except TypeError:
+                        pass
+        print('\n')
