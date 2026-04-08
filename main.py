@@ -1,6 +1,7 @@
 #! /usr/bin/env python3
 
 import imaplib, email, string
+from tqdm import tqdm
 from pathlib import Path
 from datetime import date
 from random import choice
@@ -8,7 +9,7 @@ from getpass import getpass
 from email.parser import Parser
 from optparse import OptionParser
 from time import strftime, localtime
-from colorama import Fore, Back, Style
+from colorama import Fore, Style
 
 status_color = {
     '+': Fore.GREEN,
@@ -36,32 +37,32 @@ if __name__ == "__main__":
                               ('-p', "--port", "port", f"Port of IMAP Server (Default={imap_port})"),
                               ('-S', "--use-ssl", "use_ssl", f"Use SSL for Transfering Mail Data from IMAP Server (Default={use_ssl})"))
     if not arguments.user:
-        display(':', f"Please Provide a {Back.MAGENTA}User{Back.RESET} : ", end='')
+        display(':', f"Please Provide a User : ", end='')
         arguments.user = input()
     if not arguments.server:
-        display(':', f"Please Provide a {Back.MAGENTA}Server{Back.RESET} : ", end='')
+        display(':', f"Please Provide a Server : ", end='')
         arguments.server = input()
     arguments.port = imap_port if not arguments.port else int(arguments.port)
     arguments.use_ssl = False if arguments.use_ssl != None and 't' not in arguments.use_ssl.lower() else use_ssl
     password = getpass(f"Enter password for [{arguments.user}@{arguments.server}:{arguments.port}] : ")
 
-    display(':', f"Connecting to Server {Back.MAGENTA}{arguments.server}:{arguments.port}{Back.RESET}")
+    display(':', f"Connecting to Server {Fore.LIGHTBLUE_EX}{arguments.server}:{arguments.port}{Fore.RESET}")
     try:
         Mailbox = imaplib.IMAP4_SSL(arguments.server, port=arguments.port) if arguments.use_ssl else imaplib.IMAP4(arguments.server, port=arguments.port)
     except:
-        display('-', f"Can't Reach IMAP Server {Back.MAGENTA}{arguments.server}:{arguments.port}{Back.RESET}")
+        display('-', f"Can't Reach IMAP Server {Fore.LIGHTBLUE_EX}{arguments.server}:{arguments.port}{Fore.RESET}")
         exit(0)
-    display(':', f"Authenticating User {Back.MAGENTA}{arguments.user}{Back.RESET}  @ IMAP Server {Back.MAGENTA}{arguments.server}:{arguments.port}{Back.RESET}")
+    display(':', f"Authenticating User {Fore.MAGENTA}{arguments.user}{Fore.CYAN}  @ IMAP Server {Fore.LIGHTBLUE_EX}{arguments.server}:{arguments.port}{Fore.RESET}")
     try:
         Mailbox.login(arguments.user, password)
     except:
-        display('-', f"Authentication Failed for User {Back.MAGENTA}{arguments.user}{Back.RESET} @ IMAP Server {Back.MAGENTA}{arguments.server}:{arguments.port}{Back.RESET}")
+        display('-', f"Authentication Failed for User {Fore.MAGENTA}{arguments.user}{Fore.RED} @ IMAP Server {Fore.LIGHTBLUE_EX}{arguments.server}:{arguments.port}{Fore.RESET}")
         exit(0)
-    display('+', f"User {Back.MAGENTA}{arguments.user}{Back.RESET} Authenticated @ {Back.MAGENTA}{arguments.server}:{arguments.port}{Back.RESET}")
+    display('+', f"User {Fore.MAGENTA}{arguments.user}{Fore.GREEN} Authenticated @ {Fore.LIGHTBLUE_EX}{arguments.server}:{arguments.port}{Fore.RESET}")
 
     list_status, mailboxes = Mailbox.list()
     mailboxes = [str(mailbox)[str(mailbox).index('"." ')+4:].replace('"', '').replace("'", '') for mailbox in mailboxes]
-    display(':', f"Total Mailboxes = {Back.MAGENTA}{len(mailboxes)}{Back.RESET}")
+    display(':', f"Total Mailboxes = {len(mailboxes)}")
     for mailbox in mailboxes:
         display('+', f"\t* {mailbox}")
     print()
@@ -71,7 +72,6 @@ if __name__ == "__main__":
     user_directory.mkdir(exist_ok=True, parents=True)
 
     for mailbox in mailboxes:
-        display(':', f"Fetching {Back.MAGENTA}{mailbox}{Back.RESET}")
         mailbox_directory = user_directory / mailbox
         mailbox_directory.mkdir(exist_ok=True)
         Mailbox.select(f'"{mailbox}"')
@@ -80,14 +80,12 @@ if __name__ == "__main__":
             mail_indexes = [mail_index for mail_index in str(mail_data[0]).replace('b', '').replace("'", '').split(' ') if mail_index != '']
             total_mails = len(mail_indexes)
             if total_mails == 0:
-                display('+', f"No Mails Found")
+                display('+', f"No Mails Found in {Fore.MAGENTA}{mailbox}{Fore.RESET}", end='\n\n')
                 continue
-            display('+', f"Mails Found = {Back.MAGENTA}{total_mails}{Back.RESET}")
         except ValueError:
-            display('+', f"No Mails Found")
+            display('+', f"No Mails Found in {Fore.MAGENTA}{mailbox}{Fore.RESET}", end='\n\n')
             continue
-        for index, mail_index in enumerate(mail_indexes):
-            display('*', f"Mails Retrieved = {index+1}/{total_mails}", start='\r', end='')
+        for index, mail_index in enumerate(tqdm(mail_indexes, desc=f"Fetching Mails from {mailbox}", unit="mail", colour="green")):
             mail_status, individual_mail_data = Mailbox.fetch(mail_index, "(RFC822)")
             mail_directory = mailbox_directory / f"{mail_index}"
             mail_directory.mkdir(exist_ok=True)
