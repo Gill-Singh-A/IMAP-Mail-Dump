@@ -11,6 +11,7 @@ Modules/Packages used:
 * optparse
 * time
 * colorama
+* tqdm
 <!-- -->
 Install the dependencies:
 ```bash
