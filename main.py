@@ -7,7 +7,7 @@ from datetime import date
 from random import choice
 from getpass import getpass
 from email.parser import Parser
-from optparse import OptionParser
+from argparse import ArgumentParser
 from time import strftime, localtime
 from colorama import Fore, Style
 
@@ -26,24 +26,17 @@ def display(status, data, start='', end='\n'):
     print(f"{start}{status_color[status]}[{status}] {Fore.BLUE}[{date.today()} {strftime('%H:%M:%S', localtime())}] {status_color[status]}{Style.BRIGHT}{data}{Fore.RESET}{Style.RESET_ALL}", end=end)
 
 def get_arguments(*args):
-    parser = OptionParser()
-    for arg in args:
-        parser.add_option(arg[0], arg[1], dest=arg[2], help=arg[3])
-    return parser.parse_args()[0]
+    description = "Mail Dumping using IMAP"
+    parser = ArgumentParser(description=description)
+    parser.add_argument('-u', "--user", type=str, required=True, help="Username of EMail")
+    parser.add_argument('-s', "--server", type=str, required=True, help="Address of IMAP Server")
+    parser.add_argument('-p', "--port", type=int, help=f"Port of IMAP Server (Default={imap_port})", default=imap_port)
+    parser.add_argument('-S', "--use-ssl", action="store_true", help=f"Use SSL for Transfering Mail Data from IMAP Server (Default={use_ssl})", default=True)
+    parser.add_argument('-d', "--delete", action="store_true", help="Delete Mails from the server after Backup")
+    return parser.parse_args()
 
 if __name__ == "__main__":
-    arguments = get_arguments(('-u', "--user", "user", "Username of EMail"),
-                              ('-s', "--server", "server", "Address of IMAP Server"),
-                              ('-p', "--port", "port", f"Port of IMAP Server (Default={imap_port})"),
-                              ('-S', "--use-ssl", "use_ssl", f"Use SSL for Transfering Mail Data from IMAP Server (Default={use_ssl})"))
-    if not arguments.user:
-        display(':', f"Please Provide a User : ", end='')
-        arguments.user = input()
-    if not arguments.server:
-        display(':', f"Please Provide a Server : ", end='')
-        arguments.server = input()
-    arguments.port = imap_port if not arguments.port else int(arguments.port)
-    arguments.use_ssl = False if arguments.use_ssl != None and 't' not in arguments.use_ssl.lower() else use_ssl
+    arguments = get_arguments()
     password = getpass(f"Enter password for [{arguments.user}@{arguments.server}:{arguments.port}] : ")
 
     display(':', f"Connecting to Server {Fore.LIGHTBLUE_EX}{arguments.server}:{arguments.port}{Fore.RESET}")
@@ -122,4 +115,10 @@ if __name__ == "__main__":
                                 file.write(part.get_payload(decode=True))
                     except TypeError:
                         pass
+            if arguments.delete:
+                Mailbox.store(mail_index, "+FLAGS", "\\Deleted")
         print('\n')
+    if arguments.delete:
+        Mailbox.expunge()
+    Mailbox.close()
+    Mailbox.logout()
