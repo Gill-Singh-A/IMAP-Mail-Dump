@@ -61,7 +61,7 @@ if __name__ == "__main__":
     print()
 
     cwd = Path.cwd()
-    user_directory = cwd / f"{arguments.server}:{arguments.port}" / arguments.user
+    user_directory = cwd / f"{arguments.server}_{arguments.port}" / arguments.user
     user_directory.mkdir(exist_ok=True, parents=True)
 
     for mailbox in mailboxes:
